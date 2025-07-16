@@ -1,0 +1,13 @@
+/target/
+/repos/
+/.idea/
+/.vscode/
+/__pycache__/
+/*.pyc
+*.pkl
+*.log
+*.iml
+.DS_Store
+src/main/python/config.txt
+src/main/python/commit_scanner.py
+src/main/python/mail_sender.py
