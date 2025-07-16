@@ -1,7 +1,11 @@
 import sys
 import re
 import traceback
+import io
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+
+# UTF-8 çıktı ayarı (Windows için şart)
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 model_path = "C:\\Users\\TUĞRUL BİBER\\.cache\\huggingface\\hub\\models--deepseek-ai--deepseek-coder-5.7bmqa-base"
 
@@ -29,13 +33,13 @@ Kod diff:
 """
 
 try:
-    print(" Tokenizer indiriliyor...")
+    print("Tokenizer indiriliyor...")
     tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
 
-    print(" Model indiriliyor...")
+    print("Model indiriliyor...")
     model = AutoModelForCausalLM.from_pretrained(model_path, local_files_only=True)
 
-    print("  Cevap üretiliyor...")
+    print("Cevap üretiliyor...")
     pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
     output = pipe(prompt, max_new_tokens=300, do_sample=False)[0]["generated_text"]
 
