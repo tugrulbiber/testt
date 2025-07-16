@@ -31,9 +31,9 @@ public class EmailService {
 
             mailSender.send(mimeMessage);
 
-            System.out.println("✅ Mail gönderildi: " + to);
+            System.out.println(" Mail gönderildi: " + to);
         } catch (Exception e) {
-            System.out.println("❌ Mail gönderilemedi: " + e.getMessage());
+            System.out.println(" Mail gönderilemedi: " + e.getMessage());
         }
     }
 
@@ -42,15 +42,16 @@ public class EmailService {
         String subject = "Şüpheli Commit Tespit Edildi";
 
         String body = "Merhaba " + author + ",\n\n" +
-                "Potansiyel olarak sorunlu bir commit tespit edildi:\n\n" +
+                "Bir commit incelemesi sırasında dikkat edilmesi gereken bir durum tespit edildi:\n\n" +
                 " Repository: " + repoName + "\n" +
                 " Dosya: " + fileName + "\n" +
-                (lineNumber > 0 ? "🔢 Satır: " + lineNumber + "\n" : "") +
+                (lineNumber > 0 ? "🔹 Satır: " + lineNumber + "\n" : "") +
                 " Commit ID: " + commitHash + "\n" +
                 " Commit Mesajı: " + message + "\n\n" +
-                " AI Geri Bildirimi:\n" + aiFeedback + "\n\n" +
-                "Lütfen bu commit’i tekrar gözden geçirin.\n\n" +
-                "Saygılar,\nCommitScanner Bot";
+                " Yapay Zeka Açıklaması:\n" + aiFeedback + "\n\n" +
+                "Lütfen bu dosyayı gözden geçir.\n\n" +
+                "Teşekkürler,\nCommitScanner";
+
 
         sendSimpleEmail(email, subject, body);
     }
