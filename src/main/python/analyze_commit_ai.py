@@ -1,29 +1,25 @@
 import sys
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
+import re
+import traceback
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
-# ---------------------- ARG CHECK ----------------------
-if len(sys.argv) < 3:
-    print("Kullanım: python analyze_commit_ai.py '<commit_message>' '<commit_diff>'")
-    sys.exit(1)
+model_path = "C:\\Users\\TUĞRUL BİBER\\.cache\\huggingface\\hub\\models--deepseek-ai--deepseek-coder-5.7bmqa-base"
 
-commit_message = sys.argv[1]
-commit_diff = sys.argv[2]
+commit_message = sys.argv[1] if len(sys.argv) > 1 else "Mesaj boş"
+commit_diff = sys.argv[2] if len(sys.argv) > 2 else "Diff boş"
 
-# ---------------------- LOAD MODEL ----------------------
-model_path = "C:/path/to/your/model/deepseek-coder-5.7bmqa-base"  # <-- burayı kendi klasör yoluna göre düzenle
-tokenizer = AutoTokenizer.from_pretrained(model_path)
-model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch.float16, device_map="auto")
+# Path temizleme
+commit_diff = re.sub(r'[A-Z]:\\\\[^\\s\n\r]+', '[local path]', commit_diff)
+commit_diff = re.sub(r'(/[\w./\-]+)+', '[repo path]', commit_diff)
 
-# ---------------------- PROMPT ----------------------
 prompt = f"""
-Sen bir yapay zeka kod inceleyicisisin.
+Sen bir yazılım denetleyicisisin.
 
-Aşağıda bir commit mesajı ve ona ait kod farkı (diff) verilecektir.
+Aşağıda bir commit mesajı ve kod farkı (diff) verilmiştir.
 
-Senin görevin:
-- Eğer commit’te herhangi bir sorun, kötü pratik ya da geliştirilebilecek bir yer varsa, sadece o kısmı yaz.
-- Eğer bir problem yoksa yalnızca "Sorun tespit edilmedi." yaz.
+- Sorun varsa hangi dosyada, hangi satırda olduğunu yaz.
+- Açık ve sade bir açıklama ver.
+- Sorun yoksa "Sorun bulunamadı." yaz.
 
 Commit mesajı:
 {commit_message}
@@ -32,9 +28,29 @@ Kod diff:
 {commit_diff}
 """
 
-# ---------------------- TOKENIZE + GENERATE ----------------------
-inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-outputs = model.generate(**inputs, max_new_tokens=512)
+try:
+    print(" Tokenizer indiriliyor...")
+    tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
 
-generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
-print(generated_text)
+    print(" Model indiriliyor...")
+    model = AutoModelForCausalLM.from_pretrained(model_path, local_files_only=True)
+
+    print("  Cevap üretiliyor...")
+    pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
+    output = pipe(prompt, max_new_tokens=300, do_sample=False)[0]["generated_text"]
+
+    # Gereksiz local path'leri çıkart
+    output = re.sub(r'[A-Z]:\\\\[^\\s\n\r]+', '[local path]', output)
+    output = re.sub(r'(/[\w./\-]+)+', '[repo path]', output)
+
+    print(output)
+
+except Exception as e:
+    tb_lines = traceback.format_exception_only(type(e), e)
+    error_summary = tb_lines[-1].strip()
+
+    # Line numarası ayıklama (varsa)
+    match = re.search(r'line (\d+)', error_summary)
+    line_info = f"Satır: {match.group(1)}" if match else "Satır bilgisi bulunamadı"
+
+    print(f"Yapay Zeka çalıştırılamadı. Hata: {error_summary} ({line_info})")
