@@ -1,11 +1,7 @@
 import sys
 import re
 import traceback
-import io
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
-
-# UTF-8 çıktı ayarı (Windows için şart)
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 model_path = "C:\\Users\\TUĞRUL BİBER\\.cache\\huggingface\\hub\\models--deepseek-ai--deepseek-coder-5.7bmqa-base"
 
@@ -43,18 +39,22 @@ try:
     pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
     output = pipe(prompt, max_new_tokens=300, do_sample=False)[0]["generated_text"]
 
-    # Gereksiz local path'leri çıkart
+    # Gereksiz path'leri temizle
     output = re.sub(r'[A-Z]:\\\\[^\\s\n\r]+', '[local path]', output)
     output = re.sub(r'(/[\w./\-]+)+', '[repo path]', output)
 
     print(output)
 
 except Exception as e:
-    tb_lines = traceback.format_exception_only(type(e), e)
-    error_summary = tb_lines[-1].strip()
+    error_summary = "Yapay zeka analizi sırasında bir hata oluştu: "
 
-    # Line numarası ayıklama (varsa)
-    match = re.search(r'line (\d+)', error_summary)
-    line_info = f"Satır: {match.group(1)}" if match else "Satır bilgisi bulunamadı"
+    if "HFValidationError" in str(e):
+        message = "Repo kimliği geçersiz formatta. Lütfen model yolu veya HuggingFace erişim ayarlarınızı kontrol edin."
+    elif "safetensors" in str(e):
+        message = "Model yüklenemedi. 'safetensors' kütüphanesi eksik olabilir."
+    else:
+        # Daha genel bir hata özeti
+        tb_lines = traceback.format_exception_only(type(e), e)
+        message = tb_lines[-1].strip()
 
-    print(f"Yapay Zeka çalıştırılamadı. Hata: {error_summary} ({line_info})")
+    print(f"{error_summary}{message}")
