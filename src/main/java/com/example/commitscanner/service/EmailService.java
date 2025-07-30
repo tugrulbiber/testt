@@ -17,33 +17,39 @@ public class EmailService {
     public void sendCommitNotification(String author, String email, String commitHash, String message,
                                        String aiFeedback, String repoName, String fileName, int lineNumber) {
 
-        String subject = "Commit İncelemesi – Yapay Zeka Uyarısı";
+        String subject = "Commit Review - AI Alert";
 
-        String body = "Merhaba " + author + ",\n\n" +
-                "Bir commit incelemesi sırasında dikkat edilmesi gereken bir durum tespit edildi:\n\n" +
-                " Repository: " + repoName + "\n" +
-                " Dosya: " + fileName + "\n" +
-                (lineNumber > 0 ? " Satır: " + lineNumber + "\n" : "") +
-                " Commit ID: " + commitHash + "\n" +
-                " Commit Mesajı: " + message + "\n\n" +
-                " Yapay Zeka Açıklaması:\n" + aiFeedback + "\n\n" +
-                "Lütfen bu dosyayı gözden geçir.\n\n" +
-                "Teşekkürler,\nCommitScanner";
+        StringBuilder bodyBuilder = new StringBuilder();
+        bodyBuilder.append("A potential issue was detected during a commit review:\n\n")
+                .append("Repository: ").append(repoName).append("\n")
+                .append("File: ").append(fileName).append("\n");
+        if (lineNumber > 0) {
+            bodyBuilder.append("Line: ").append(lineNumber).append("\n");
+        }
+        if (commitHash != null && !commitHash.isBlank()) {
+            bodyBuilder.append("Commit ID: ").append(commitHash).append("\n");
+        }
+        if (message != null && !message.isBlank()) {
+            bodyBuilder.append("Commit Message: ").append(message).append("\n");
+        }
+        bodyBuilder.append("\nAI Explanation:\n").append(aiFeedback).append("\n\n")
+                .append("Please review this file.\n\n")
+                .append("Thank you,\nCommitScanner");
 
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, false, "UTF-8");
 
-            helper.setFrom("turulbiber@gmail.com");
+            helper.setFrom("turulbiber@example.com"); //MAİL GÖNDEREN ADRESİ
             helper.setTo(email);
             helper.setSubject(subject);
-            helper.setText(body);
+            helper.setText(bodyBuilder.toString());
 
             mailSender.send(mimeMessage);
-            System.out.println(" Mail gönderildi: " + email);
+            System.out.println("Mail sent to: " + email);
 
         } catch (MessagingException e) {
-            System.out.println(" Mail gönderilemedi: " + e.getMessage());
+            System.out.println("Failed to send mail: " + e.getMessage());
         }
     }
 }
