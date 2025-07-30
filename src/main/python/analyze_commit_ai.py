@@ -1,10 +1,16 @@
 import sys
 import re
 import os
+import io
+import sys
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 def format_email_body(repository, filename, commit_id, commit_message, ai_explanation):
     filename_clean = os.path.basename(filename) if filename else "-"
+    commit_id_clean = commit_id if commit_id else "unknown_commit"
+    commit_message_clean = commit_message if commit_message else "Mesaj boş"
     return f"""
 Merhaba -----,
 
@@ -12,8 +18,8 @@ Bir commit incelemesi sırasında dikkat edilmesi gereken bir durum tespit edild
 
  Repository: {repository}
  Dosya: {filename_clean}
- Commit ID: {commit_id}
- Commit Mesajı: {commit_message}
+ Commit ID: {commit_id_clean}
+ Commit Mesajı: {commit_message_clean}
 
  Yapay Zeka Açıklaması:
 {ai_explanation}
