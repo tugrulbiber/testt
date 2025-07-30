@@ -27,7 +27,7 @@ Teşekkürler,
 CommitScanner
 """.strip()
 
-model_id = "deepseek-ai/deepseek-coder-5.7b-instruct"
+model_id = "deepseek-ai/deepseek-coder-5.7bmqa-base"
 
 def remove_xml_diffs(diff_text):
 blocks = re.split(r'(?=diff --git )', diff_text)
