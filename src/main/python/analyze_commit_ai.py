@@ -2,7 +2,6 @@ import sys
 import re
 import os
 import io
-import sys
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
@@ -43,29 +42,11 @@ commit_message = sys.argv[4] if len(sys.argv) > 4 else "Mesaj boş"
 commit_diff = sys.argv[5] if len(sys.argv) > 5 else ""
 
 if not commit_diff.strip():
-    ai_explanation = f"{repo_name} adlı repoda commit farkı (diff) tespit edilemedi."
-    email_body = format_email_body(
-        repository=repo_name,
-        filename="-",
-        commit_id=commit_id,
-        commit_message=commit_message,
-        ai_explanation=ai_explanation
-    )
-    print(email_body)
     sys.exit(0)
 
 commit_diff_filtered = remove_xml_diffs(commit_diff)
 
 if not commit_diff_filtered.strip():
-    ai_explanation = f"{repo_name} adlı repoda yalnızca XML dosyalarına ait diff bulundu, analiz yapılmadı."
-    email_body = format_email_body(
-        repository=repo_name,
-        filename="-",
-        commit_id=commit_id,
-        commit_message=commit_message,
-        ai_explanation=ai_explanation
-    )
-    print(email_body)
     sys.exit(0)
 
 prompt = f"""
