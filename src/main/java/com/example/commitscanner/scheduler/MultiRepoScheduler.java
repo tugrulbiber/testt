@@ -17,7 +17,6 @@ public class MultiRepoScheduler {
     private final AiAnalyzerService aiAnalyzerService;
 
     private final List<String> repoUrls = List.of(
-            "https://github.com/tugrulbiber/leave_management_ai",
             "https://github.com/tugrulbiber/CommitScannerAi",
             "https://github.com/ozcangunatis/commitscanner",
             "https://github.com/ozcangunatis/management-backend"

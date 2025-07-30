@@ -1,75 +1,105 @@
 import sys
 import re
-import traceback
+import os
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
-from utilsemailformatter import format_email_body  # Burada mail formatlama fonksiyonunu import ettim
 
-# Hugging Face model ID'si
+def format_email_body(repository, filename, commit_id, commit_message, ai_explanation):
+    filename_clean = os.path.basename(filename) if filename else "-"
+    return f"""
+Merhaba -----,
+
+Bir commit incelemesi sırasında dikkat edilmesi gereken bir durum tespit edildi:
+
+ Repository: {repository}
+ Dosya: {filename_clean}
+ Commit ID: {commit_id}
+ Commit Mesajı: {commit_message}
+
+ Yapay Zeka Açıklaması:
+{ai_explanation}
+
+Lütfen bu dosyayı gözden geçir.
+
+Teşekkürler,
+CommitScanner
+""".strip()
+
 model_id = "deepseek-ai/deepseek-coder-5.7b-instruct"
 
-commit_message = sys.argv[1] if len(sys.argv) > 1 else "Mesaj boş"
-commit_diff = sys.argv[2] if len(sys.argv) > 2 else "Diff boş"
+def remove_xml_diffs(diff_text):
+    blocks = re.split(r'(?=diff --git )', diff_text)
+    return ''.join(block for block in blocks if not re.search(r'\.xml\b', block, re.IGNORECASE))
 
-# Path temizleme
-commit_diff_clean = re.sub(r'[A-Z]:\\\\[^\\s\n\r]+', '[local path]', commit_diff)
-commit_diff_clean = re.sub(r'(/[\w./\-]+)+', '[repo path]', commit_diff_clean)
+repo_name = sys.argv[1] if len(sys.argv) > 1 else "unknown_repo"
+file_name = sys.argv[2] if len(sys.argv) > 2 else "unknown_file"
+commit_id = sys.argv[3] if len(sys.argv) > 3 else "unknown_commit"
+commit_message = sys.argv[4] if len(sys.argv) > 4 else "Mesaj boş"
+commit_diff = sys.argv[5] if len(sys.argv) > 5 else ""
+
+if not commit_diff.strip():
+    ai_explanation = f"{repo_name} adlı repoda commit farkı (diff) tespit edilemedi."
+    email_body = format_email_body(
+        repository=repo_name,
+        filename="-",
+        commit_id=commit_id,
+        commit_message=commit_message,
+        ai_explanation=ai_explanation
+    )
+    print(email_body)
+    sys.exit(0)
+
+commit_diff_filtered = remove_xml_diffs(commit_diff)
+
+if not commit_diff_filtered.strip():
+    ai_explanation = f"{repo_name} adlı repoda yalnızca XML dosyalarına ait diff bulundu, analiz yapılmadı."
+    email_body = format_email_body(
+        repository=repo_name,
+        filename="-",
+        commit_id=commit_id,
+        commit_message=commit_message,
+        ai_explanation=ai_explanation
+    )
+    print(email_body)
+    sys.exit(0)
 
 prompt = f"""
-Sen deneyimli bir yazılım denetleyicisisin ve görevin commit mesajı ile birlikte verilen kod farklarını (diff) analiz ederek olası sorunları belirlemek.
+Sen deneyimli bir yazılım denetleyicisisin. Aşağıda bir commit mesajı ve kod farkı (diff) veriliyor. Bu bilgileri kullanarak teknik bir geri bildirim oluştur.
 
-⛏️ Analiz Kuralları:
-1. Kodda **hatalı mantık, eksik validasyon, güvenlik açığı** veya **kod kalitesi sorunları** varsa tespit et.
-2. Hangi **dosyada** ve mümkünse **satır numarasında** olduğunu belirt.
-3. Açıklaman **teknik ve profesyonel** olsun. Gereksiz tekrar veya varsayım yapma.
-4. Eğer açık bir sorun yoksa **“Kodda belirgin bir sorun tespit edilmedi.”** de.
-5. Commit mesajı ile diff arasında tutarsızlık varsa, belirt.
+Kurallar:
+- Güvenlik açığı, mantık hatası, validasyon eksikliği veya kod kalitesi sorunu varsa açıkla.
+- Dosya veya satır bilgisi belirtilebiliyorsa belirt.
+- Gerekli yerlerde örnek ver.
+- Gereksiz tekrar yapma.
+- Sorun yoksa “Kodda belirgin bir sorun tespit edilmedi.” yaz.
+- Commit mesajı ile diff tutarsızsa bunu da belirt.
 
 Commit mesajı:
 {commit_message}
 
 Kod diff:
-{commit_diff_clean}
+{commit_diff_filtered}
 """
 
 try:
-    print("📦 Tokenizer indiriliyor...")
     tokenizer = AutoTokenizer.from_pretrained(model_id)
-
-    print("🧠 Model indiriliyor...")
     model = AutoModelForCausalLM.from_pretrained(model_id)
-
-    print("🤖 Cevap üretiliyor...")
     pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
-    raw_output = pipe(prompt, max_new_tokens=300, do_sample=False)[0]["generated_text"]
-
-    # Output'ta local path tekrar temizle
-    output_clean = re.sub(r'[A-Z]:\\\\[^\\s\n\r]+', '[local path]', raw_output)
-    output_clean = re.sub(r'(/[\w./\-]+)+', '[repo path]', output_clean)
-
-    # Mail formatını kullanarak çıktıyı hazırla
+    raw_output = pipe(prompt, max_new_tokens=300, do_sample=True, temperature=0.7)[0]["generated_text"]
     email_body = format_email_body(
-        repository="leave_management_ai",  # Burayı dinamik yapabilirsin
-        filename="[dosya adı]",            # Dinamik hale getirilebilir
-        commit_id="[commit id]",           # Dinamik olarak dışardan al
+        repository=repo_name,
+        filename=file_name,
+        commit_id=commit_id,
         commit_message=commit_message,
-        ai_explanation=output_clean
+        ai_explanation=raw_output.strip()
     )
-
     print(email_body)
-
-except Exception as e:
-    tb_lines = traceback.format_exception_only(type(e), e)
-    error_summary = tb_lines[-1].strip()
-    match = re.search(r'line (\d+)', error_summary)
-    line_info = f"Satır: {match.group(1)}" if match else "Satır bilgisi bulunamadı"
-    error_message = f"Yapay Zeka çalıştırılamadı. Hata: {error_summary} ({line_info})"
-
+except Exception:
+    error_message = "Yapay zeka çalıştırılamadı, teknik bir hata oluştu."
     email_body = format_email_body(
-        repository="leave_management_ai",
-        filename="[dosya adı]",
-        commit_id="[commit id]",
+        repository=repo_name,
+        filename=file_name,
+        commit_id=commit_id,
         commit_message=commit_message,
         ai_explanation=error_message
     )
-
     print(email_body)
