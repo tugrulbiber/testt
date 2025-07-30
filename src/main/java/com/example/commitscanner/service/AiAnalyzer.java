@@ -14,7 +14,6 @@ public class AiAnalyzer {
                     commitDiff
             );
 
-            // stdout + stderr birleşsin (hataları da okuyalım)
             pb.redirectErrorStream(true);
 
             Process process = pb.start();
@@ -33,7 +32,7 @@ public class AiAnalyzer {
 
             String result = output.toString().trim();
             return result.isEmpty()
-                    ? "⚠️ AI analizinden sonuç alınamadı. Parametreler gitmemiş olabilir."
+                    ? "AI analizinden sonuç alınamadı. Parametreler gitmemiş olabilir."
                     : result;
 
         } catch (Exception e) {

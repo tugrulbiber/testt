@@ -97,7 +97,6 @@ public class DynamicGitService {
         }
     }
 
-    // ✅ Eklenen: Commit'teki dosya isimlerini verir (sadece ad, path yok)
     public List<String> getChangedFileNames(String repoPath, String commitHash) {
         List<String> fileNames = new ArrayList<>();
         try (Git git = Git.open(new File(repoPath))) {

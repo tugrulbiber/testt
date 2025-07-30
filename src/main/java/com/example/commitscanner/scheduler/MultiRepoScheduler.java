@@ -59,15 +59,14 @@ public class MultiRepoScheduler {
                 String message = gitService.getCommitMessageByHash(repoPath, commitHash);
                 String diff = gitService.getCommitDiffByHash(repoPath, commitHash);
 
-                // Local pathleri temizle
                 diff = diff.replaceAll("[A-Z]:\\\\[^\\s\n\r]+", "[local path]");
                 diff = diff.replaceAll("(/[\\w\\-./]+)+", "[repo path]");
 
-                String email = "turulbiber@gmail.com"; // ileride dinamik hale getirilecek
+                String email = "turulbiber@gmail.com";
                 List<String> changedFiles = gitService.getChangedFileNames(repoPath, commitHash);
 
                 String fileName = changedFiles.isEmpty() ? "UnknownFile.java" : changedFiles.get(0); // ilk dosya adı
-                int lineNumber = 0; // Opsiyonel, şimdilik sabit
+                int lineNumber = 0;
 
                 String feedback = aiAnalyzerService.analyzeCommit(message, diff);
 
@@ -108,4 +107,3 @@ public class MultiRepoScheduler {
     }
 }
 
-//asdasdasdasdasdadasdadasdasasdasdasd

@@ -15,21 +15,21 @@ public class AutoRepoManager {
 
             try {
                 if (!repoDir.exists()) {
-                    System.out.println("⏳ Klonlanıyor: " + url);
+                    System.out.println("Klonlanıyor: " + url);
                     Git.cloneRepository()
                             .setURI(url)
                             .setDirectory(repoDir)
                             .call();
-                    System.out.println("✅ Klonlandı: " + repoDir.getPath());
+                    System.out.println("Klonlandı: " + repoDir.getPath());
                 } else {
-                    System.out.println("🔄 Güncelleniyor: " + repoDir.getPath());
+                    System.out.println("Güncelleniyor: " + repoDir.getPath());
                     Git.open(repoDir)
                             .pull()
                             .call();
-                    System.out.println("✅ Güncellendi: " + repoDir.getPath());
+                    System.out.println("Güncellendi: " + repoDir.getPath());
                 }
             } catch (Exception e) {
-                System.err.println("❌ Repo işlenemedi: " + url);
+                System.err.println("Repo işlenemedi: " + url);
                 e.printStackTrace();
             }
         }

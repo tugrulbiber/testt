@@ -15,8 +15,6 @@ public class CommitService {
     public void saveCommit(CommitRecord commitRecord) {
         commitRecordRepository.save(commitRecord);
     }
-
-    // ✅ Commit hash veritabanında var mı kontrol et
     public boolean existsByCommitHash(String commitHash) {
         return commitRecordRepository.existsByCommitHash(commitHash);
     }
