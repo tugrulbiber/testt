@@ -7,7 +7,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 def format_email_body(repository, filename, commit_id, commit_message, ai_explanation):
-    filename_clean = os.path.basename(filename) if filename else "-"
+    filename_clean = os.path.basename(filename) if filename is not None else "-"
     commit_id_clean = commit_id if commit_id else "unknown_commit"
     commit_message_clean = commit_message if commit_message else "Empty message"
     return f"""

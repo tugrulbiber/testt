@@ -32,7 +32,7 @@ public class MultiRepoScheduler {
         this.aiAnalyzerService = aiAnalyzerService;
     }
 
-    @Scheduled(fixedRate = 60000) // her dakika çalışır (test için)
+    @Scheduled(fixedRate = 300000) // her dakika çalışır (test için)
     public void scanAllRepos() {
 
         AutoRepoManager.prepareRepositories(repoUrls);
