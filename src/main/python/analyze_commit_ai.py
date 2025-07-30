@@ -35,6 +35,8 @@ def remove_xml_diffs(diff_text):
     blocks = re.split(r'(?=diff --git )', diff_text)
     return ''.join(block for block in blocks if not re.search(r'\.xml\b', block, re.IGNORECASE))
 
+MAX_PROMPT_CHARS = 4000
+
 repo_name = sys.argv[1] if len(sys.argv) > 1 else "unknown_repo"
 file_name = sys.argv[2] if len(sys.argv) > 2 else "unknown_file"
 commit_id = sys.argv[3] if len(sys.argv) > 3 else "unknown_commit"
@@ -42,12 +44,32 @@ commit_message = sys.argv[4] if len(sys.argv) > 4 else "Mesaj boş"
 commit_diff = sys.argv[5] if len(sys.argv) > 5 else ""
 
 if not commit_diff.strip():
+    explanation = "Kod diff'i boş olduğu için analiz yapılmadı."
+    email_body = format_email_body(
+        repository=repo_name,
+        filename=file_name,
+        commit_id=commit_id,
+        commit_message=commit_message,
+        ai_explanation=explanation
+    )
+    print(email_body)
     sys.exit(0)
 
 commit_diff_filtered = remove_xml_diffs(commit_diff)
 
 if not commit_diff_filtered.strip():
+    explanation = "Sadece XML dosyaları içerdiği için analiz yapılmadı."
+    email_body = format_email_body(
+        repository=repo_name,
+        filename=file_name,
+        commit_id=commit_id,
+        commit_message=commit_message,
+        ai_explanation=explanation
+    )
+    print(email_body)
     sys.exit(0)
+
+commit_diff_limited = commit_diff_filtered[:MAX_PROMPT_CHARS]
 
 prompt = f"""
 Sen deneyimli bir yazılım denetleyicisisin. Aşağıda bir commit mesajı ve kod farkı (diff) veriliyor. Bu bilgileri kullanarak teknik bir geri bildirim oluştur.
@@ -64,7 +86,7 @@ Commit mesajı:
 {commit_message}
 
 Kod diff:
-{commit_diff_filtered}
+{commit_diff_limited}
 """
 
 try:
@@ -90,3 +112,4 @@ except Exception:
         ai_explanation=error_message
     )
     print(email_body)
+    sys.exit(1)
