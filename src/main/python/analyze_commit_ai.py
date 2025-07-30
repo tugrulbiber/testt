@@ -5,7 +5,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from utilsemailformatter import format_email_body  # Burada mail formatlama fonksiyonunu import ettim
 
 # Hugging Face model ID'si
-model_id = "deepseek-ai/deepseek-coder-5.7bmqa-base"
+model_id = "deepseek-ai/deepseek-coder-5.7b-instruct"
 
 commit_message = sys.argv[1] if len(sys.argv) > 1 else "Mesaj boş"
 commit_diff = sys.argv[2] if len(sys.argv) > 2 else "Diff boş"
@@ -15,13 +15,14 @@ commit_diff_clean = re.sub(r'[A-Z]:\\\\[^\\s\n\r]+', '[local path]', commit_diff
 commit_diff_clean = re.sub(r'(/[\w./\-]+)+', '[repo path]', commit_diff_clean)
 
 prompt = f"""
-Sen bir yazılım denetleyicisisin.
+Sen deneyimli bir yazılım denetleyicisisin ve görevin commit mesajı ile birlikte verilen kod farklarını (diff) analiz ederek olası sorunları belirlemek.
 
-Aşağıda bir commit mesajı ve kod farkı (diff) verilmiştir.
-
-- Sorun varsa hangi dosyada, hangi satırda olduğunu yaz.
-- Açık ve sade bir açıklama ver.
-- Sorun yoksa "Sorun bulunamadı." yaz.
+⛏️ Analiz Kuralları:
+1. Kodda **hatalı mantık, eksik validasyon, güvenlik açığı** veya **kod kalitesi sorunları** varsa tespit et.
+2. Hangi **dosyada** ve mümkünse **satır numarasında** olduğunu belirt.
+3. Açıklaman **teknik ve profesyonel** olsun. Gereksiz tekrar veya varsayım yapma.
+4. Eğer açık bir sorun yoksa **“Kodda belirgin bir sorun tespit edilmedi.”** de.
+5. Commit mesajı ile diff arasında tutarsızlık varsa, belirt.
 
 Commit mesajı:
 {commit_message}
