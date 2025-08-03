@@ -28,14 +28,12 @@ def clean_ai_output(text):
         cleaned_lines.append(line)
     return '\n'.join(cleaned_lines).strip()
 
-# Argümanlar
 repo_name = sys.argv[1] if len(sys.argv) > 1 else "unknown_repo"
 file_name = sys.argv[2] if len(sys.argv) > 2 else "unknown_file"
 commit_id = sys.argv[3] if len(sys.argv) > 3 else "unknown_commit"
 commit_message = sys.argv[4] if len(sys.argv) > 4 else ""
 commit_diff = sys.argv[5] if len(sys.argv) > 5 else ""
 
-# Diff kontrolü
 if not commit_diff.strip():
     print("Code diff is empty, no analysis performed.")
     sys.exit(0)
@@ -48,7 +46,6 @@ if not commit_diff_filtered.strip():
 
 commit_diff_limited = commit_diff_filtered[:MAX_PROMPT_CHARS]
 
-# Prompt
 prompt = f"""
 You are an experienced software reviewer. Below is a commit message and a code diff snippet. Provide a clear, concise summary of any issues without repeating or quoting the diff or commit message.
 
@@ -67,7 +64,6 @@ Code diff snippet:
 {commit_diff_limited}
 """
 
-# AI işleyişi
 try:
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     model = AutoModelForCausalLM.from_pretrained(model_id)
