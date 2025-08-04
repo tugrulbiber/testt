@@ -32,7 +32,7 @@ public class MultiRepoScheduler {
         this.aiAnalyzerService = aiAnalyzerService;
     }
 
-    @Scheduled(fixedRate = 300000) // her dakika çalışır (test için)
+    @Scheduled(fixedRate = 300000)
     public void scanAllRepos() {
 
         AutoRepoManager.prepareRepositories(repoUrls);
@@ -64,23 +64,15 @@ public class MultiRepoScheduler {
                 String email = "turulbiber@gmail.com";
                 List<String> changedFiles = gitService.getChangedFileNames(repoPath, commitHash);
 
-                String fileName = changedFiles.isEmpty() ? "UnknownFile.java" : changedFiles.get(0); // ilk dosya adı
-                int lineNumber = 0;
+                String fileName = changedFiles.isEmpty() ? "UnknownFile.java" : changedFiles.get(0);
+
+                emailService.sendCommitNotification(author, email, commitHash, message, repoName, fileName, diff);
 
                 String feedback = aiAnalyzerService.analyzeCommit(message, diff);
 
                 boolean hasIssue = feedback.toLowerCase().contains("risk")
                         || feedback.toLowerCase().contains("hata")
                         || feedback.toLowerCase().contains("daha iyi");
-
-                emailService.sendCommitNotification(
-                        author,
-                        email,
-                        commitHash,
-                        message,
-                        feedback,
-                        lineNumber
-                );
 
                 CommitRecord record = new CommitRecord();
                 record.setCommitHash(commitHash);
@@ -103,4 +95,3 @@ public class MultiRepoScheduler {
         return url.substring(url.lastIndexOf('/') + 1).replace(".git", "");
     }
 }
-
