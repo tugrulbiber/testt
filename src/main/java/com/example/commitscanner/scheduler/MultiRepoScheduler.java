@@ -79,8 +79,6 @@ public class MultiRepoScheduler {
                         commitHash,
                         message,
                         feedback,
-                        repoName,
-                        fileName,
                         lineNumber
                 );
 

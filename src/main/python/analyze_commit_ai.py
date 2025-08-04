@@ -28,6 +28,10 @@ def clean_ai_output(text):
         cleaned_lines.append(line)
     return '\n'.join(cleaned_lines).strip()
 
+def extract_affected_line(diff_text):
+    matches = re.findall(r'^@@ -\d+,\d+ \+(\d+),\d+ @@', diff_text, re.MULTILINE)
+    return int(matches[0]) if matches else 0
+
 repo_name = sys.argv[1] if len(sys.argv) > 1 else "unknown_repo"
 file_name = sys.argv[2] if len(sys.argv) > 2 else "unknown_file"
 commit_id = sys.argv[3] if len(sys.argv) > 3 else "unknown_commit"
@@ -45,6 +49,7 @@ if not commit_diff_filtered.strip():
     sys.exit(0)
 
 commit_diff_limited = commit_diff_filtered[:MAX_PROMPT_CHARS]
+affected_line = extract_affected_line(commit_diff_filtered)
 
 prompt = f"""
 You are an experienced software reviewer. Below is a commit message and a code diff snippet. Provide a clear, concise summary of any issues without repeating or quoting the diff or commit message.
@@ -76,6 +81,7 @@ try:
         ai_explanation = "No significant issues detected."
 
     print(ai_explanation)
+    print(f"AffectedLine:{affected_line}")
 except Exception:
     print("AI execution failed due to a technical error.")
     sys.exit(1)

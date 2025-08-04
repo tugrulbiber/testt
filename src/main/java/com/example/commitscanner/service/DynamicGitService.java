@@ -66,8 +66,7 @@ public class DynamicGitService {
     }
 
     public String getCommitDiffByHash(String repoPath, String commitHash) {
-        try (Git git = Git.open(new File(repoPath))) {
-            Repository repo = git.getRepository();
+        try (Git git = Git.open(new File(repoPath))) {Repository repo = git.getRepository();
             ObjectId commitId = repo.resolve(commitHash);
             RevWalk walk = new RevWalk(repo);
             RevCommit commit = walk.parseCommit(commitId);
